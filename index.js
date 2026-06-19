@@ -5,6 +5,7 @@ const express = require("express");
 const dontenv = require("dotenv");
 const cors = require("cors");
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
+const { createRemoteJWKSet, jwtVerify } = require("jose-cjs");
 dontenv.config();
 
 const uri = process.env.MONGODB_URI;
@@ -28,6 +29,41 @@ const client = new MongoClient(uri, {
   },
 });
 
+const JWKS = createRemoteJWKSet(
+  new URL(`${process.env.CLIENT_URL}/api/auth/jwks`),
+);
+
+const verifyToken = async (req, res, next) => {
+  const authHeader = req?.headers.authorization;
+
+  if (!authHeader || !authHeader.startsWith("Bearer")) {
+    return res.status(401).json({ msg: "Unauthorized" });
+  }
+
+  const token = authHeader.split(" ")[1];
+
+  if (!token) {
+    return res.status(401).json({ msg: "Unauthorized" });
+  }
+
+  try {
+    const { payload } = await jwtVerify(token, JWKS);
+    req.user = payload;
+
+    next();
+  } catch (error) {
+    return res.status(401).json({ msg: "Unauthorized" });
+  }
+};
+
+const ownerVerify = async (req, res, next) => {
+  const user = req.user;
+  if (user.role !== "owner") {
+    return res.status(403).json({ msg: "Forbidden" });
+  }
+  next();
+};
+
 async function run() {
   try {
     await client.connect();
@@ -35,7 +71,7 @@ async function run() {
     const userCollection = db.collection("user");
     const propertyCollection = db.collection("property");
 
-    app.post("/owner/property", async (req, res) => {
+    app.post("/owner/property", verifyToken, ownerVerify, async (req, res) => {
       try {
         const property = req.body;
 
