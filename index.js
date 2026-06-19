@@ -71,6 +71,9 @@ async function run() {
     const userCollection = db.collection("user");
     const propertyCollection = db.collection("property");
 
+
+    // Owner All API
+    
     app.post("/owner/property", verifyToken, ownerVerify, async (req, res) => {
       try {
         const property = req.body;
@@ -129,6 +132,27 @@ async function run() {
           res.send(result);
         } catch (error) {
           res.status(500).send({ error: "Failed to update property" });
+        }
+      },
+    );
+
+    app.delete(
+      "/owner/property/:id",
+      verifyToken,
+      ownerVerify,
+      async (req, res) => {
+        try {
+          const { id } = req.params;
+
+          const result = await propertyCollection.deleteOne({
+            _id: new ObjectId(id),
+          });
+
+          res.send(result);
+        } catch (error) {
+          res.status(500).send({
+            error: "Failed to delete property",
+          });
         }
       },
     );
