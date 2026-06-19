@@ -64,6 +64,13 @@ const ownerVerify = async (req, res, next) => {
   next();
 };
 
+const adminVerify = (req, res, next) => {
+  if (req.user.role !== "admin") {
+    return res.status(403).json({ msg: "Admin only" });
+  }
+  next();
+};
+
 async function run() {
   try {
     await client.connect();
@@ -71,9 +78,8 @@ async function run() {
     const userCollection = db.collection("user");
     const propertyCollection = db.collection("property");
 
-
     // Owner All API
-    
+
     app.post("/owner/property", verifyToken, ownerVerify, async (req, res) => {
       try {
         const property = req.body;
@@ -153,6 +159,37 @@ async function run() {
           res.status(500).send({
             error: "Failed to delete property",
           });
+        }
+      },
+    );
+
+    // All Admin API
+
+    app.get("/admin/users", verifyToken, adminVerify, async (req, res) => {
+      try {
+        const users = await userCollection.find().toArray();
+        res.send(users);
+      } catch (error) {
+        res.status(500).send({ error: "Failed to fetch users" });
+      }
+    });
+
+    app.patch(
+      "/admin/user/:id/role",
+      verifyToken,
+      adminVerify,
+      async (req, res) => {
+        try {
+          const { role } = req.body;
+
+          const result = await userCollection.updateOne(
+            { _id: new ObjectId(req.params.id) },
+            { $set: { role } },
+          );
+
+          res.send(result);
+        } catch (error) {
+          res.status(500).send({ error: "Failed to update role" });
         }
       },
     );
