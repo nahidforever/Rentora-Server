@@ -86,6 +86,27 @@ async function run() {
       }
     });
 
+    // GET OWNER PROPERTIES
+    app.get(
+      "/owner/properties/:ownerId",
+      verifyToken,
+      ownerVerify,
+      async (req, res) => {
+        try {
+          const { ownerId } = req.params;
+
+          const properties = await propertyCollection
+            .find({ ownerId })
+            .sort({ createdAt: -1 })
+            .toArray();
+
+          res.send(properties);
+        } catch (error) {
+          res.status(500).send({ error: "Failed to fetch properties" });
+        }
+      },
+    );
+
     await client.db("admin").command({ ping: 1 });
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!",
