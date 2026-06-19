@@ -107,6 +107,32 @@ async function run() {
       },
     );
 
+    app.patch(
+      "/owner/property/:id",
+      verifyToken,
+      ownerVerify,
+      async (req, res) => {
+        try {
+          const { id } = req.params;
+
+          const updatedData = req.body;
+
+          const result = await propertyCollection.updateOne(
+            { _id: new ObjectId(id) },
+            {
+              $set: {
+                ...updatedData,
+                updatedAt: new Date(),
+              },
+            },
+          );
+          res.send(result);
+        } catch (error) {
+          res.status(500).send({ error: "Failed to update property" });
+        }
+      },
+    );
+
     await client.db("admin").command({ ping: 1 });
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!",
