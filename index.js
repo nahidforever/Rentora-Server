@@ -257,6 +257,63 @@ async function run() {
       },
     );
 
+    app.patch(
+      "/admin/property/:id/approve",
+      verifyToken,
+      adminVerify,
+      async (req, res) => {
+        try {
+          const { id } = req.params;
+
+          const result = await propertyCollection.updateOne(
+            { _id: new ObjectId(id) },
+            {
+              $set: {
+                status: "Approved",
+                rejectionFeedback: "",
+              },
+            },
+          );
+
+          res.send(result);
+        } catch (error) {
+          res.status(500).send({
+            error: "Failed to approve property",
+          });
+        }
+      },
+    );
+
+    app.patch(
+      "/admin/property/:id/reject",
+      verifyToken,
+      adminVerify,
+      async (req, res) => {
+        try {
+          const { id } = req.params;
+          const { feedback } = req.body;
+
+          const result = await propertyCollection.updateOne(
+            {
+              _id: new ObjectId(id),
+            },
+            {
+              $set: {
+                status: "Rejected",
+                rejectionFeedback: feedback,
+              },
+            },
+          );
+
+          res.send(result);
+        } catch (error) {
+          res.status(500).send({
+            error: "Failed to reject property",
+          });
+        }
+      },
+    );
+
     await client.db("admin").command({ ping: 1 });
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!",
