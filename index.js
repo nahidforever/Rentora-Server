@@ -194,6 +194,69 @@ async function run() {
       },
     );
 
+    app.get("/admin/properties", verifyToken, adminVerify, async (req, res) => {
+      try {
+        const properties = await propertyCollection
+          .find()
+          .sort({ createdAt: -1 })
+          .toArray();
+
+        res.send(properties);
+      } catch (error) {
+        res.status(500).send({ error: "Failed to fetch properties" });
+      }
+    });
+
+    app.patch(
+      "/admin/property/:id",
+      verifyToken,
+      adminVerify,
+      async (req, res) => {
+        try {
+          const { id } = req.params;
+
+          const updatedData = req.body;
+
+          const result = await propertyCollection.updateOne(
+            { _id: new ObjectId(id) },
+            {
+              $set: {
+                ...updatedData,
+                updatedAt: new Date(),
+              },
+            },
+          );
+
+          res.send(result);
+        } catch (error) {
+          res.status(500).send({
+            error: "Failed to update property",
+          });
+        }
+      },
+    );
+
+    app.delete(
+      "/admin/property/:id",
+      verifyToken,
+      adminVerify,
+      async (req, res) => {
+        try {
+          const { id } = req.params;
+
+          const result = await propertyCollection.deleteOne({
+            _id: new ObjectId(id),
+          });
+
+          res.send(result);
+        } catch (error) {
+          res.status(500).send({
+            error: "Failed to delete property",
+          });
+        }
+      },
+    );
+
     await client.db("admin").command({ ping: 1 });
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!",
