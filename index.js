@@ -85,6 +85,8 @@ async function run() {
     const userCollection = db.collection("user");
     const propertyCollection = db.collection("property");
     const favoriteCollection = db.collection("favorites");
+    const bookingCollection = db.collection("booking");
+    const paymentCollection = db.collection("payment");
 
     // Public API
 
@@ -227,6 +229,66 @@ async function run() {
         }
       },
     );
+
+    app.post("/payment", verifyToken, tenantVerify, async (req, res) => {
+      try {
+        const payment = req.body;
+
+        // save transaction
+        await paymentCollection.insertOne({
+          transactionId: payment.transactionId,
+          propertyId: payment.propertyId,
+          propertyTitle: payment.propertyTitle,
+
+          amount: Number(payment.amount),
+          ownerName: payment.ownerName,
+
+          tenantId: payment.tenantId,
+          tenantName: payment.tenantName,
+          tenantEmail: payment.tenantEmail,
+
+          paymentStatus: "Paid",
+
+          createdAt: new Date(),
+        });
+
+        // create booking
+        await bookingCollection.insertOne({
+          propertyId: payment.propertyId,
+          propertyTitle: payment.propertyTitle,
+          propertyImage: payment.propertyImage,
+          location: payment.location,
+          rent: Number(payment.amount),
+
+          ownerId: payment.ownerId,
+          ownerName: payment.ownerName,
+          ownerEmail: payment.ownerEmail,
+
+          tenantId: payment.tenantId,
+          tenantName: payment.tenantName,
+          tenantEmail: payment.tenantEmail,
+
+          moveInDate: payment.moveInDate,
+          contactNumber: payment.contactNumber,
+          additionalNotes: payment.additionalNotes,
+
+          bookingStatus: "Pending",
+          paymentStatus: "Paid",
+
+          transactionId: payment.transactionId,
+
+          createdAt: new Date(),
+        });
+
+        res.send({
+          inserted: true,
+        });
+      } catch (error) {
+        res.status(500).send({
+          error: "Payment failed",
+        });
+      }
+    });
 
     // Owner All API
 
