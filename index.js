@@ -64,6 +64,13 @@ const ownerVerify = async (req, res, next) => {
   next();
 };
 
+const tenantVerify = (req, res, next) => {
+  if (req.user.role !== "tenant") {
+    return res.status(403).json({ msg: "Admin only" });
+  }
+  next();
+};
+
 const adminVerify = (req, res, next) => {
   if (req.user.role !== "admin") {
     return res.status(403).json({ msg: "Admin only" });
@@ -77,6 +84,149 @@ async function run() {
     const db = client.db("rentora-db");
     const userCollection = db.collection("user");
     const propertyCollection = db.collection("property");
+    const favoriteCollection = db.collection("favorites");
+
+    // Public API
+
+    app.get("/properties", async (req, res) => {
+      try {
+        const search = req.query.search || "";
+        const propertyType = req.query.propertyType || "";
+        const sort = req.query.sort || "";
+
+        const query = {
+          status: "Approved",
+        };
+
+        if (search) {
+          query.location = {
+            $regex: search,
+            $options: "i",
+          };
+        }
+
+        if (propertyType) {
+          query.propertyType = propertyType;
+        }
+
+        let sortOption = {};
+
+        if (sort === "low") {
+          sortOption = { rent: 1 };
+        }
+
+        if (sort === "high") {
+          sortOption = { rent: -1 };
+        }
+
+        const properties = await propertyCollection
+          .find(query)
+          .sort(sortOption)
+          .toArray();
+
+        res.send(properties);
+      } catch (error) {
+        res.status(500).send({
+          error: "Failed to fetch properties",
+        });
+      }
+    });
+
+    // Tenant APIS
+
+    app.get("/property/:id", verifyToken, tenantVerify, async (req, res) => {
+      try {
+        const { id } = req.params;
+
+        const property = await propertyCollection.findOne({
+          _id: new ObjectId(id),
+        });
+
+        res.send(property);
+      } catch (error) {
+        res.status(500).send({
+          error: "Failed to fetch property",
+        });
+      }
+    });
+
+    app.post(
+      "/tenant/favorite",
+      verifyToken,
+      tenantVerify,
+      async (req, res) => {
+        try {
+          const favorite = req.body;
+
+          // duplicate check
+          const exists = await favoriteCollection.findOne({
+            propertyId: favorite.propertyId,
+            tenantEmail: favorite.tenantEmail,
+          });
+
+          if (exists) {
+            return res.send({
+              acknowledged: false,
+              message: "Already added",
+            });
+          }
+
+          const result = await favoriteCollection.insertOne({
+            ...favorite,
+            createdAt: new Date(),
+          });
+
+          res.send(result);
+        } catch (error) {
+          res.status(500).send({
+            error: "Failed to add favorite",
+          });
+        }
+      },
+    );
+
+    app.get(
+      "/tenant/favorites/:email",
+      verifyToken,
+      tenantVerify,
+      async (req, res) => {
+        try {
+          const { email } = req.params;
+
+          const favorites = await favoriteCollection
+            .find({ tenantEmail: email })
+            .sort({ createdAt: -1 })
+            .toArray();
+
+          res.send(favorites);
+        } catch (error) {
+          res.status(500).send({
+            error: "Failed to fetch favorites",
+          });
+        }
+      },
+    );
+
+    app.delete(
+      "/tenant/favorite/:id",
+      verifyToken,
+      tenantVerify,
+      async (req, res) => {
+        try {
+          const { id } = req.params;
+
+          const result = await favoriteCollection.deleteOne({
+            _id: new ObjectId(id),
+          });
+
+          res.send(result);
+        } catch (error) {
+          res.status(500).send({
+            error: "Failed to remove favorite",
+          });
+        }
+      },
+    );
 
     // Owner All API
 
