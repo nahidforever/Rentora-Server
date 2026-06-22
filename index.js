@@ -290,6 +290,27 @@ async function run() {
       }
     });
 
+    app.get("/tenant/bookings", verifyToken, tenantVerify, async (req, res) => {
+      try {
+        const email = req.user.email;
+
+        const result = await bookingCollection
+          .find({
+            tenantEmail: email,
+          })
+          .sort({
+            createdAt: -1,
+          })
+          .toArray();
+
+        res.send(result);
+      } catch (error) {
+        res.status(500).send({
+          error: "Failed to fetch bookings",
+        });
+      }
+    });
+
     // Owner All API
 
     app.post("/owner/property", verifyToken, ownerVerify, async (req, res) => {
@@ -370,6 +391,83 @@ async function run() {
         } catch (error) {
           res.status(500).send({
             error: "Failed to delete property",
+          });
+        }
+      },
+    );
+
+    app.get("/owner/bookings", verifyToken, ownerVerify, async (req, res) => {
+      try {
+        const ownerEmail = req.user.email;
+
+        const result = await bookingCollection
+          .find({
+            ownerEmail,
+          })
+          .sort({
+            createdAt: -1,
+          })
+          .toArray();
+
+        res.send(result);
+      } catch (error) {
+        res.status(500).send({
+          error: "Failed to fetch bookings",
+        });
+      }
+    });
+
+    app.patch(
+      "/owner/booking/:id/approve",
+      verifyToken,
+      ownerVerify,
+      async (req, res) => {
+        try {
+          const { id } = req.params;
+
+          const result = await bookingCollection.updateOne(
+            {
+              _id: new ObjectId(id),
+            },
+            {
+              $set: {
+                bookingStatus: "Approved",
+              },
+            },
+          );
+
+          res.send(result);
+        } catch (error) {
+          res.status(500).send({
+            error: "Failed to approve booking",
+          });
+        }
+      },
+    );
+
+    app.patch(
+      "/owner/booking/:id/reject",
+      verifyToken,
+      ownerVerify,
+      async (req, res) => {
+        try {
+          const { id } = req.params;
+
+          const result = await bookingCollection.updateOne(
+            {
+              _id: new ObjectId(id),
+            },
+            {
+              $set: {
+                bookingStatus: "Rejected",
+              },
+            },
+          );
+
+          res.send(result);
+        } catch (error) {
+          res.status(500).send({
+            error: "Failed to reject booking",
           });
         }
       },
