@@ -87,6 +87,7 @@ async function run() {
     const favoriteCollection = db.collection("favorites");
     const bookingCollection = db.collection("booking");
     const paymentCollection = db.collection("payment");
+    const reviewCollection = db.collection("review");
 
     // Public API
 
@@ -241,7 +242,10 @@ async function run() {
           propertyTitle: payment.propertyTitle,
 
           amount: Number(payment.amount),
+
+          ownerId: payment.ownerId,
           ownerName: payment.ownerName,
+          ownerEmail: payment.ownerEmail,
 
           tenantId: payment.tenantId,
           tenantName: payment.tenantName,
@@ -307,6 +311,45 @@ async function run() {
       } catch (error) {
         res.status(500).send({
           error: "Failed to fetch bookings",
+        });
+      }
+    });
+
+    app.post("/tenant/review", verifyToken, tenantVerify, async (req, res) => {
+      try {
+        const review = req.body;
+
+        const result = await reviewCollection.insertOne({
+          ...review,
+          rating: Number(review.rating),
+          createdAt: new Date(),
+        });
+
+        res.send(result);
+      } catch (error) {
+        res.status(500).send({
+          error: "Failed to add review",
+        });
+      }
+    });
+
+    app.get("/reviews/:propertyId", async (req, res) => {
+      try {
+        const { propertyId } = req.params;
+
+        const result = await reviewCollection
+          .find({
+            propertyId,
+          })
+          .sort({
+            createdAt: -1,
+          })
+          .toArray();
+
+        res.send(result);
+      } catch (error) {
+        res.status(500).send({
+          error: "Failed to load reviews",
         });
       }
     });
@@ -468,6 +511,92 @@ async function run() {
         } catch (error) {
           res.status(500).send({
             error: "Failed to reject booking",
+          });
+        }
+      },
+    );
+
+    app.get("/owner/analytics", verifyToken, ownerVerify, async (req, res) => {
+      try {
+        const email = req.user.email;
+
+        // total properties
+        const totalProperties = await propertyCollection.countDocuments({
+          ownerEmail: email,
+        });
+
+        // confirmed bookings
+        const totalBookings = await bookingCollection.countDocuments({
+          ownerEmail: email,
+          bookingStatus: "Approved",
+        });
+
+        // paid transactions
+        const payments = await paymentCollection
+          .find({
+            ownerName: { $exists: true },
+            paymentStatus: "Paid",
+          })
+          .toArray();
+
+        const ownerPayments = payments.filter(
+          (item) => item.ownerEmail === email,
+        );
+
+        // total earnings
+        const totalEarnings = ownerPayments.reduce(
+          (sum, item) => sum + Number(item.amount),
+          0,
+        );
+
+        res.send({
+          totalProperties,
+          totalBookings,
+          totalEarnings,
+        });
+      } catch (error) {
+        res.status(500).send({
+          error: "Failed to load analytics",
+        });
+      }
+    });
+
+    app.get(
+      "/owner/monthly-earnings",
+      verifyToken,
+      ownerVerify,
+      async (req, res) => {
+        try {
+          const ownerId = req.user.id;
+
+          const payments = await paymentCollection
+            .find({
+              ownerId,
+              paymentStatus: "Paid",
+            })
+            .toArray();
+
+          const months = {};
+
+          payments.forEach((payment) => {
+            const date = new Date(payment.createdAt);
+
+            const month = date.toLocaleString("default", {
+              month: "short",
+            });
+
+            months[month] = (months[month] || 0) + payment.amount;
+          });
+
+          const chartData = Object.entries(months).map(([month, earnings]) => ({
+            month,
+            earnings,
+          }));
+
+          res.send(chartData);
+        } catch (error) {
+          res.status(500).send({
+            error: "Failed to load chart data",
           });
         }
       },
