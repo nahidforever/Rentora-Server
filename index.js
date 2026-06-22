@@ -624,6 +624,41 @@ async function run() {
       },
     );
 
+    app.get("/admin/bookings", verifyToken, adminVerify, async (req, res) => {
+      try {
+        const bookings = await bookingCollection
+          .find()
+          .sort({ createdAt: -1 })
+          .toArray();
+
+        res.send(bookings);
+      } catch (error) {
+        res.status(500).send({
+          error: "Failed to load bookings",
+        });
+      }
+    });
+
+    app.get(
+      "/admin/transactions",
+      verifyToken,
+      adminVerify,
+      async (req, res) => {
+        try {
+          const result = await paymentCollection
+            .find()
+            .sort({ createdAt: -1 })
+            .toArray();
+
+          res.send(result);
+        } catch (error) {
+          res.status(500).send({
+            error: "Failed to fetch transactions",
+          });
+        }
+      },
+    );
+
     await client.db("admin").command({ ping: 1 });
     console.log(
       "Pinged your deployment. You successfully connected to MongoDB!",
