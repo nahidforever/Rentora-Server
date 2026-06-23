@@ -66,7 +66,7 @@ const ownerVerify = async (req, res, next) => {
 
 const tenantVerify = (req, res, next) => {
   if (req.user.role !== "tenant") {
-    return res.status(403).json({ msg: "Admin only" });
+    return res.status(403).json({ msg: "Forbidden" });
   }
   next();
 };
@@ -148,6 +148,47 @@ async function run() {
       } catch (error) {
         res.status(500).send({
           error: "Failed to fetch featured properties",
+        });
+      }
+    });
+
+    app.get("/home-reviews", async (req, res) => {
+      try {
+        const reviews = await reviewCollection
+          .find({
+            rating: { $gte: 4 }, // only good reviews
+          })
+          .sort({
+            rating: -1,
+            createdAt: -1,
+          })
+          .limit(4)
+          .toArray();
+
+        res.send(reviews);
+      } catch (error) {
+        res.status(500).send({
+          error: "Failed to load reviews",
+        });
+      }
+    });
+
+    app.get("/recent-properties", async (req, res) => {
+      try {
+        const properties = await propertyCollection
+          .find({
+            status: "Approved",
+          })
+          .sort({
+            createdAt: -1,
+          })
+          .limit(6)
+          .toArray();
+
+        res.send(properties);
+      } catch (error) {
+        res.status(500).send({
+          error: "Failed to fetch recent properties",
         });
       }
     });
