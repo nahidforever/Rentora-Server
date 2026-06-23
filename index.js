@@ -135,6 +135,23 @@ async function run() {
       }
     });
 
+    app.get("/featured-properties", async (req, res) => {
+      try {
+        const properties = await propertyCollection
+          .find({
+            status: "Approved",
+          })
+          .limit(6)
+          .toArray();
+
+        res.send(properties);
+      } catch (error) {
+        res.status(500).send({
+          error: "Failed to fetch featured properties",
+        });
+      }
+    });
+
     // Tenant APIS
 
     app.get("/property/:id", verifyToken, tenantVerify, async (req, res) => {
@@ -353,6 +370,47 @@ async function run() {
         });
       }
     });
+
+    app.get(
+      "/tenant/dashboard-overview",
+      verifyToken,
+      tenantVerify,
+      async (req, res) => {
+        try {
+          const tenantEmail = req.user.email;
+
+          const totalBookings = await bookingCollection.countDocuments({
+            tenantEmail,
+          });
+
+          const totalFavorites = await favoriteCollection.countDocuments({
+            tenantEmail,
+          });
+
+          const payments = await paymentCollection
+            .find({
+              tenantEmail,
+              paymentStatus: "Paid",
+            })
+            .toArray();
+
+          const totalPaid = payments.reduce(
+            (sum, item) => sum + item.amount,
+            0,
+          );
+
+          res.send({
+            totalBookings,
+            totalFavorites,
+            totalPaid,
+          });
+        } catch (error) {
+          res.status(500).send({
+            error: "Failed to load dashboard data",
+          });
+        }
+      },
+    );
 
     // Owner All API
 
@@ -603,6 +661,29 @@ async function run() {
     );
 
     // All Admin API
+
+    app.get("/admin/overview", verifyToken, adminVerify, async (req, res) => {
+      try {
+        const totalUsers = await userCollection.countDocuments();
+
+        const totalProperties = await propertyCollection.countDocuments();
+
+        const totalBookings = await bookingCollection.countDocuments();
+
+        const totalTransactions = await paymentCollection.countDocuments();
+
+        res.send({
+          totalUsers,
+          totalProperties,
+          totalBookings,
+          totalTransactions,
+        });
+      } catch (error) {
+        res.status(500).send({
+          error: "Failed to load dashboard overview",
+        });
+      }
+    });
 
     app.get("/admin/users", verifyToken, adminVerify, async (req, res) => {
       try {
