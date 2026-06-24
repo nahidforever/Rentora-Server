@@ -97,10 +97,15 @@ async function run() {
         const propertyType = req.query.propertyType || "";
         const sort = req.query.sort || "";
 
+        const location = req.query.location || "";
+        const minPrice = req.query.minPrice || "";
+        const maxPrice = req.query.maxPrice || "";
+
         const query = {
           status: "Approved",
         };
 
+        // Existing Search
         if (search) {
           query.location = {
             $regex: search,
@@ -108,18 +113,44 @@ async function run() {
           };
         }
 
+        // Banner Location Search
+        if (location) {
+          query.location = {
+            $regex: location,
+            $options: "i",
+          };
+        }
+
+        // Property Type
         if (propertyType) {
           query.propertyType = propertyType;
+        }
+
+        // Price Range
+        if (minPrice || maxPrice) {
+          query.rent = {};
+
+          if (minPrice) {
+            query.rent.$gte = Number(minPrice);
+          }
+
+          if (maxPrice) {
+            query.rent.$lte = Number(maxPrice);
+          }
         }
 
         let sortOption = {};
 
         if (sort === "low") {
-          sortOption = { rent: 1 };
+          sortOption = {
+            rent: 1,
+          };
         }
 
         if (sort === "high") {
-          sortOption = { rent: -1 };
+          sortOption = {
+            rent: -1,
+          };
         }
 
         const properties = await propertyCollection
@@ -356,16 +387,30 @@ async function run() {
       try {
         const email = req.user.email;
 
-        const result = await bookingCollection
+        const page = parseInt(req.query.page) || 1;
+        const limit = 10;
+        const skip = (page - 1) * limit;
+
+        const totalBookings = await bookingCollection.countDocuments({
+          tenantEmail: email,
+        });
+
+        const bookings = await bookingCollection
           .find({
             tenantEmail: email,
           })
           .sort({
             createdAt: -1,
           })
+          .skip(skip)
+          .limit(limit)
           .toArray();
 
-        res.send(result);
+        res.send({
+          bookings,
+          totalPages: Math.ceil(totalBookings / limit),
+          currentPage: page,
+        });
       } catch (error) {
         res.status(500).send({
           error: "Failed to fetch bookings",
@@ -391,26 +436,31 @@ async function run() {
       }
     });
 
-    app.get("/reviews/:propertyId", async (req, res) => {
-      try {
-        const { propertyId } = req.params;
+    app.get(
+      "/reviews/:propertyId",
+      verifyToken,
+      tenantVerify,
+      async (req, res) => {
+        try {
+          const { propertyId } = req.params;
 
-        const result = await reviewCollection
-          .find({
-            propertyId,
-          })
-          .sort({
-            createdAt: -1,
-          })
-          .toArray();
+          const result = await reviewCollection
+            .find({
+              propertyId,
+            })
+            .sort({
+              createdAt: -1,
+            })
+            .toArray();
 
-        res.send(result);
-      } catch (error) {
-        res.status(500).send({
-          error: "Failed to load reviews",
-        });
-      }
-    });
+          res.send(result);
+        } catch (error) {
+          res.status(500).send({
+            error: "Failed to load reviews",
+          });
+        }
+      },
+    );
 
     app.get(
       "/tenant/dashboard-overview",
@@ -757,14 +807,29 @@ async function run() {
 
     app.get("/admin/properties", verifyToken, adminVerify, async (req, res) => {
       try {
+        const page = parseInt(req.query.page) || 1;
+        const limit = 10;
+
+        const skip = (page - 1) * limit;
+
+        const totalProperties = await propertyCollection.countDocuments();
+
         const properties = await propertyCollection
           .find()
           .sort({ createdAt: -1 })
+          .skip(skip)
+          .limit(limit)
           .toArray();
 
-        res.send(properties);
+        res.send({
+          properties,
+          totalPages: Math.ceil(totalProperties / limit),
+          currentPage: page,
+        });
       } catch (error) {
-        res.status(500).send({ error: "Failed to fetch properties" });
+        res.status(500).send({
+          error: "Failed to fetch properties",
+        });
       }
     });
 
