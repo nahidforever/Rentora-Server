@@ -794,14 +794,39 @@ async function run() {
         try {
           const { role } = req.body;
 
+          const targetUser = await userCollection.findOne({
+            _id: new ObjectId(req.params.id),
+          });
+
+          if (!targetUser) {
+            return res.status(404).send({
+              error: "User not found",
+            });
+          }
+
+          // Super Admin cannot be modified
+          if (targetUser.email === "admin@gmail.com") {
+            return res.status(403).send({
+              error: "Super Admin role cannot be changed.",
+            });
+          }
+
           const result = await userCollection.updateOne(
-            { _id: new ObjectId(req.params.id) },
-            { $set: { role } },
+            {
+              _id: new ObjectId(req.params.id),
+            },
+            {
+              $set: {
+                role,
+              },
+            },
           );
 
           res.send(result);
         } catch (error) {
-          res.status(500).send({ error: "Failed to update role" });
+          res.status(500).send({
+            error: "Failed to update role",
+          });
         }
       },
     );
