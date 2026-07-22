@@ -1,265 +1,352 @@
 # 🚀 Rentora Server
 
-Backend API for Rentora — Your Next Home Awaits.
+> Backend REST API for **Rentora — Your Next Home Awaits**
 
-A secure and scalable REST API built with Node.js, Express.js, MongoDB Atlas, JWT Authentication, Better Auth, and Stripe Payment Integration.
+A secure, scalable, and role-based backend powering the **Rentora Property Rental & Booking Platform**. Built with **Node.js**, **Express.js**, **MongoDB Atlas**, **Better Auth**, and **JOSE JWT Verification** to provide secure authentication, property management, booking workflows, payment processing, dashboard analytics, and administrative moderation.
 
-## 📖 Overview
+## 🌐 Links
 
-Rentora Server powers the complete backend infrastructure of the Rentora Property Rental & Booking Platform.
+- **Live API:** https://rentora-server-three.vercel.app/
+- **Client Repository:** https://github.com/nahidforever/Rentora-Client
+- **Server Repository:** https://github.com/nahidforever/Rentora-Server
 
-The server handles:
+# 📖 Project Overview
 
-* Authentication & Authorization
-* User Management
-* Property Management
-* Booking System
-* Favorites System
-* Review System
-* Payment Processing
-* Dashboard Analytics
-* Admin Moderation
+Rentora Server is the backend of the Rentora Property Rental & Booking Platform.
 
-## ✨ Core Features
+It provides secure REST APIs for:
 
-### 🔐 Authentication & Authorization
+- Authentication & Authorization
+- User Role Management
+- Property Management
+- Favorites System
+- Booking Workflow
+- Payment Processing
+- Review Management
+- Dashboard Analytics
+- Administrative Moderation
 
-* JWT Authentication
-* Better Auth Integration
-* Google Login Support
-* Protected APIs
-* Role-Based Access Control (RBAC)
+The backend follows a **Role-Based Access Control (RBAC)** architecture with dedicated APIs for **Tenant**, **Owner**, and **Admin** users.
 
-### 👥 User Management
+# ✨ Core Features
 
-* User Registration
-* User Login
-* Google Authentication
-* Change User Role
-* User Profile Management
+## 🔐 Authentication & Authorization
 
-### 🏡 Property Management
+- Better Auth Authentication
+- Google OAuth Login
+- JOSE JWT Verification
+- Protected REST APIs
+- Role-Based Access Control (RBAC)
+- Authentication Middleware
+- Authorization Middleware
 
-* Add Property
-* Update Property
-* Delete Property
-* Property Approval System
-* Property Rejection Feedback
-* Owner Property Management
+## 🏡 Property Management
 
-### 📅 Booking Management
+- Add Property
+- Update Property
+- Delete Property
+- Get All Approved Properties
+- Featured Properties API
+- Recent Properties API
+- Property Details API
+- Property Approval Workflow
+- Property Rejection Feedback
 
-* Create Booking
-* Approve Booking
-* Reject Booking
-* Booking Status Tracking
+## 🔍 Search & Filtering
 
-### ❤️ Favorites Management
+- Search by Location
+- Banner Search
+- Filter by Property Type
+- Filter by Price Range
+- Price Sorting
+- Backend Filtering & Searching
 
-* Add Favorite Property
-* Remove Favorite Property
-* Get User Favorites
+## ❤️ Favorites System
 
-### ⭐ Review Management
+- Add Favorite Property
+- Remove Favorite Property
+- Get Favorite List
+- Duplicate Favorite Prevention
 
-* Submit Review
-* Property Review Storage
-* Dynamic Review Retrieval
+## 📅 Booking Management
 
-### 💳 Payment Processing
+- Property Booking
+- Booking Requests
+- Booking Approval
+- Booking Rejection
+- Booking Status Tracking
+- Booking Pagination
 
-* Stripe Payment Integration
-* Payment Intent Creation
-* Transaction Storage
-* Payment Status Tracking
+## 💳 Payment Processing
 
-### 📊 Dashboard Analytics
+- Store Payment Transactions
+- Payment Verification
+- Booking Creation After Successful Payment
+- Transaction History
+- Payment Status Management
 
-#### Owner Analytics
+## ⭐ Review System
 
-* Total Earnings
-* Total Properties
-* Total Bookings
-* Monthly Earnings Data
+- Submit Reviews
+- Property Reviews
+- Home Page Reviews
+- Rating-Based Review Filtering
 
-#### Admin Analytics
+## 📊 Dashboard Analytics
 
-* Total Users
-* Total Properties
-* Total Bookings
-* Total Transactions
+### 👤 Tenant Dashboard
 
-## 🛠️ Technologies Used
+- Total Bookings
+- Favorite Properties
+- Total Paid Amount
 
-### Backend Framework
+### 🏠 Owner Dashboard
 
-* Node.js
-* Express.js
+- Total Properties
+- Total Bookings
+- Total Earnings
+- Monthly Earnings Analytics
 
-### Database
+### 👨‍💼 Admin Dashboard
 
-* MongoDB Atlas
+- Total Users
+- Total Properties
+- Total Bookings
+- Total Transactions
 
-### Authentication
+# 👥 User Roles
 
-* JWT
-* Better Auth
-* Google OAuth
+## 👤 Tenant
 
-### Payment Gateway
+Permissions
 
-* Stripe
+- Browse Properties
+- View Property Details
+- Save Favorites
+- Book Properties
+- Make Payments
+- Submit Reviews
+- View Dashboard
 
-### Environment Management
+## 🏠 Owner
 
-* dotenv
+Permissions
 
+- Add Property
+- Update Property
+- Delete Property
+- Manage Bookings
+- Approve Bookings
+- Reject Bookings
+- View Dashboard Analytics
 
-## 📦 NPM Packages
+## 👨‍💼 Admin
+
+Permissions
+
+- Manage Users
+- Update User Roles
+- Approve Properties
+- Reject Properties
+- Update Properties
+- Delete Properties
+- View Bookings
+- View Transactions
+- Access Dashboard Analytics
+
+> **Default Admin Account**
+>
+> The default administrator account (`admin@gmail.com`) is protected. Its role cannot be modified through the Admin Panel to prevent accidental permission changes.
+
+# 📂 Database Collections
+
+| Collection    | Description                       |
+| ------------- | --------------------------------- |
+| **user**      | Stores user profiles and roles    |
+| **property**  | Stores rental properties          |
+| **favorites** | Stores tenant favorite properties |
+| **booking**   | Stores booking requests           |
+| **payment**   | Stores payment transactions       |
+| **review**    | Stores tenant reviews             |
+
+# 🛠️ Technology Stack
+
+## Backend
+
+- Node.js
+- Express.js
+
+## Database
+
+- MongoDB Atlas
+
+## Authentication
+
+- Better Auth
+- Google OAuth
+- JOSE (JWT Verification)
+
+## Security
+
+- Role-Based Authorization
+- Middleware Authentication
+- Protected APIs
+
+## Environment
+
+- dotenv
+
+# 📦 NPM Packages Used
 
 ```bash
 express
 mongodb
 cors
 dotenv
-jsonwebtoken
-stripe
 better-auth
+jose-cjs
 ```
 
+# 🔒 Security Features
 
-## 🔒 Security Features
+- Better Auth Authentication
+- JOSE JWT Verification
+- Protected REST APIs
+- Role-Based Access Control
+- Authentication Middleware
+- Authorization Middleware
+- Secure Environment Variables
+- MongoDB Atlas Secure Connection
+- CORS Configuration
 
-* JWT Protected APIs
-* Role-Based Authorization
-* Protected Dashboard APIs
-* Secure Stripe Payment Handling
-* Middleware Authentication
-* Environment Variable Protection
+# 📡 API Modules
 
+## 🌍 Public APIs
 
-## 👥 User Roles
+- Get All Properties
+- Featured Properties
+- Recent Properties
+- Home Reviews
 
-### Tenant
+## 👤 Tenant APIs
 
-Permissions:
+- Property Details
+- Favorites Management
+- Bookings
+- Payments
+- Reviews
+- Dashboard Overview
 
-* Browse Properties
-* Create Bookings
-* Add Favorites
-* Submit Reviews
+## 🏠 Owner APIs
 
-### Owner
+- Property CRUD
+- Booking Management
+- Analytics
+- Monthly Earnings
 
-Permissions:
+## 👨‍💼 Admin APIs
 
-* Add Properties
-* Update Properties
-* Delete Properties
-* Manage Booking Requests
-* View Earnings Analytics
+- Dashboard Overview
+- User Management
+- Property Moderation
+- Booking Monitoring
+- Transactions
 
-### Admin
+# 📁 Project Structure
 
-Permissions:
+```text
+server
+│
+├── index.js
+├── package.json
+├── .env
+│
+├── Middleware
+│   ├── verifyToken
+│   ├── tenantVerify
+│   ├── ownerVerify
+│   └── adminVerify
+│
+└── MongoDB Collections
+    ├── user
+    ├── property
+    ├── favorites
+    ├── booking
+    ├── payment
+    └── review
+```
 
-* Manage Users
-* Manage Properties
-* Approve Properties
-* Reject Properties
-* Monitor Transactions
-* Monitor Bookings
+# ⚙️ Environment Variables
 
-## 📂 Database Collections
+Create a `.env` file in the project root.
 
-### users
+```env
+PORT=
 
-Stores user information and roles.
+CLIENT_URL=
 
-### properties
+MONGODB_URI=
+```
 
-Stores property listings.
+# 🚀 Getting Started
 
-### bookings
+### Clone the repository
 
-Stores booking records and booking status.
+```bash
+git clone https://github.com/nahidforever/Rentora-Server.git
+```
 
-### payments
+### Navigate to the project
 
-Stores Stripe transaction information.
+```bash
+cd Rentora-Server
+```
 
-### favorites
-
-Stores user favorite properties.
-
-### reviews
-
-Stores tenant reviews and ratings.
-
----
-
-## 🚀 API Modules
-
-### Authentication APIs
-
-* User Authentication
-* JWT Verification
-* Google Login Support
-
-### Property APIs
-
-* Create Property
-* Get Properties
-* Update Property
-* Delete Property
-
-### Booking APIs
-
-* Create Booking
-* Get Bookings
-* Approve Booking
-* Reject Booking
-
-### Payment APIs
-
-* Create Payment Intent
-* Save Transaction
-* Payment Verification
-
-### Review APIs
-
-* Add Review
-* Get Reviews
-
-### Admin APIs
-
-* Manage Users
-* Manage Properties
-* Manage Bookings
-* Manage Transactions
-
-## 🚀 Running Locally
-
-Install dependencies:
+### Install dependencies
 
 ```bash
 npm install
 ```
 
-Start development server:
+### Start the development server
 
 ```bash
 npm run dev
 ```
 
-Start production server:
+### Start the production server
 
 ```bash
 npm start
 ```
 
-## 👨‍💻 Developer
+# 📌 Highlights
 
-Md. Nahid Islam
+- ✅ Better Auth Authentication
+- ✅ Google OAuth Login
+- ✅ JOSE JWT Verification
+- ✅ Role-Based Access Control (RBAC)
+- ✅ Property Approval Workflow
+- ✅ Favorites System
+- ✅ Booking Management
+- ✅ Payment Tracking
+- ✅ Review System
+- ✅ Dashboard Analytics
+- ✅ MongoDB Atlas Integration
+- ✅ Secure REST APIs
 
-Rentora Server API 🚀
+# 👨‍💻 Developer
+
+**MD. Nahid Islam**
+
+- GitHub: [https://github.com/nahidforever](https://github.com/nahidforever)
+- LinkedIn: [https://www.linkedin.com/in/nahidforever/](https://www.linkedin.com/in/nahidforever/)
+- Email: n.i.nahid02@gmail.com
+
+<div align="center">
+
+### 🚀 Rentora Server API
+
+**Powering Rentora — Your Next Home Awaits 🏠**
+
+</div>
